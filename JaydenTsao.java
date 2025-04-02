@@ -12,16 +12,8 @@ public class JaydenTsao implements Strategy, GameListener
 
    public String getName()
    {
-      return "King Botwin IV of A213";
-      //"Malenia, Bot of Miquella"
-      //"Malenia, Kitten of Rot"
-      //"cartifanbot436"
-      //"Reyna"
-      //"Mohg, Lord of Bots"
-      //"Botagon of the Kitten Order"
+      return "Playbot Carti";
       //"メ"
-      //"Playbot Carti"
-      //"Ken Citten"
    }
 
    public void gameStarted(Table table)
@@ -49,8 +41,17 @@ public class JaydenTsao implements Strategy, GameListener
       table.addListener(this);
    }
 
+   private boolean counting(ArrayList<Integer> list){
+      int x=getNumBombs();
+      for (int i = 0; i < list.size(); i++) {
+         if(list.get(i)!=null&&list.get(i)==EXPLODING_KITTEN) x--;
+      }
+      return x==0;
+   }
+
    public Play play()
    {
+      if(counting(deck)) return null;
       List<Integer> hand=table.getHand();
       int[] count=countUp(hand);
       if(numDefuse<count[DEFUSE]){
@@ -63,13 +64,13 @@ public class JaydenTsao implements Strategy, GameListener
          }
       }
       if(deck.get(0)==null){
-         if(table.getDrawPileSize()>getNumBombs()*5) return null;
-         if(hand.contains(SEE_THE_FUTURE)){
+         if(table.getDrawPileSize()>getNumBombs()*6) return null;
+         if(hand.contains(SEE_THE_FUTURE)&&deck.size()!=0){
             return new Play(SEE_THE_FUTURE);
          }
          if(table.getNumSeats()-getNumBombs()==1&&table.getDrawPileSize()>getNumBombs()*4) return null;
          if(hand.contains(FAVOR)){
-            if(getFavorVictim()!=-1 && getFavorVictim()!=table.getSeat())
+            if(getFavorVictim()!=-1)
                return new Play(FAVOR,1,getFavorVictim());
          }
          if(count[HAIRY_POTATO_CAT]>=2||count[CATTERMELON]>=2||count[RAINBOW_RALPHING_CAT]>=2||count[BEARD_CAT]>=2||count[TACOCAT]>=2){
@@ -87,19 +88,19 @@ public class JaydenTsao implements Strategy, GameListener
          return null;
       }
       else if(deck.get(0)==EXPLODING_KITTEN){
-         if(unknown && hand.contains(SEE_THE_FUTURE)) return new Play(SEE_THE_FUTURE);
+         if(unknown && hand.contains(SEE_THE_FUTURE)&&deck.size()!=0) return new Play(SEE_THE_FUTURE);
          if(hand.contains(ATTACK))
             return new Play(ATTACK);
          if(hand.contains(SKIP))
             return new Play(SKIP);
          if(hand.contains(FAVOR)){
-            if(getFavorVictim()!=-1&& getFavorVictim()!=table.getSeat())
+            if(getFavorVictim()!=-1)
                return new Play(FAVOR,1,getFavorVictim());
          }
          if(hand.contains(SHUFFLE)){
             if(countUp(hand)[SHUFFLE]>1&&deck.size()<getNumBombs()*4){
-               if(getThreeVictim()!=-1&&getFavorVictim()!=-1){
-                  if(countUp(hand)[SHUFFLE]==3) return new Play(SHUFFLE, 3, getThreeVictim(), requestedCard());
+               if(getThreeVictim()!=-1&&countUp(hand)[SHUFFLE]==3) return new Play(SHUFFLE, 3, getThreeVictim(), requestedCard());
+               if(getFavorVictim()!=-1){
                   return new Play(SHUFFLE, 2 ,getFavorVictim());
                } 
             }
@@ -114,7 +115,9 @@ public class JaydenTsao implements Strategy, GameListener
             if(play!=null) return play;
          }
 
-
+         if(count[DEFUSE]!=0){
+            
+         }
          
          //deck.remove(0);
          unknown=false;
@@ -130,7 +133,7 @@ public class JaydenTsao implements Strategy, GameListener
    private int getFavorVictim(){
       int[] ind=new int[]{-1,Integer.MAX_VALUE};
       for (int i = 0; i < table.getNumSeats(); i++) {
-         if(i!=table.getSeat()&&table.getHandSize(i)<ind[1]&&table.getHandSize(i)!=0&&!table.hasExploded(i))
+         if(i!=table.getSeat()&&(i!=-1||marcel[i]>=marcel[ind[0]])&&table.getHandSize(i)<ind[1]&&table.getHandSize(i)!=0&&!table.hasExploded(i))
             ind=new int[]{i,table.getHandSize(i)};
       }
       return ind[0];
@@ -155,7 +158,7 @@ public class JaydenTsao implements Strategy, GameListener
    {
       int ind=(int)(Math.random()*table.getDrawPileSize());
       if(table.getDrawPileSize()<2) return 0;
-      while(ind%getNumBombs()+1==table.getSeat()) ind=(int)(Math.random()*table.getDrawPileSize());
+      while((ind+1)%getNumBombs()+1==0) ind=(int)(Math.random()*table.getDrawPileSize());
       deck.add(ind,EXPLODING_KITTEN);
       return ind;
    }
@@ -175,6 +178,8 @@ public class JaydenTsao implements Strategy, GameListener
       if(n==-1)
          for (Integer i : list) 
             if(n==-1 || table.getHandSize(n)<table.getHandSize(i)) n=i;
+      //if(n==table.getSeat()) System.out.println("fdas");
+      if(n==table.getSeat()) return -1;
       return n;
    }
 
@@ -188,7 +193,7 @@ public class JaydenTsao implements Strategy, GameListener
 
    private Play miscCats(List<Integer> hand){
       int[] count=countUp(hand);
-      if(getFavorVictim()==-1||getThreeVictim()==-1) return null;
+      if(getFavorVictim()==-1||getThreeVictim()==-1||getFavorVictim()==table.getSeat()||getThreeVictim()==table.getSeat()) return null;
       if(count[HAIRY_POTATO_CAT]>=2){
          if(count[HAIRY_POTATO_CAT]==3){
             return new Play(HAIRY_POTATO_CAT,3,getThreeVictim(),requestedCard());
@@ -254,7 +259,8 @@ public class JaydenTsao implements Strategy, GameListener
 
    public boolean nope(int activeSeat, Play play, List<Integer> nopers)
    {
-      
+      if((deck.get(0)!=null&&deck.get(0)==EXPLODING_KITTEN)&&activeSeat!=table.getSeat()&&(play.getCard()==SKIP||play.getCard()==ATTACK||play.getCard()==SHUFFLE))
+         return true;
       if(play.getVictim()==table.getSeat()) {
          if(play.getCard()==FAVOR){
             if(favor(activeSeat)==DEFUSE||favor(activeSeat)==ATTACK||favor(activeSeat)==SEE_THE_FUTURE)
@@ -300,7 +306,7 @@ public class JaydenTsao implements Strategy, GameListener
    }
 
    public void cardPlayed(int seat, int card, int count, int victim, int requestedCard) {
-
+      //if(seat==victim||(victim!=-1&&table.hasExploded(victim))) System.out.println("JHSFLKJSHD:OGIHSOG"+seat);
    }
 
    public void cardUsed(int seat, int card, int count, int victim, int requestedCard, boolean cardStolen) {
@@ -339,6 +345,9 @@ public class JaydenTsao implements Strategy, GameListener
    public void cardDrawn(int seat) {
       stf=false;
       if(unknown) unknown=false;
+      if(deck.isEmpty()){
+         return;
+      }
       deck.remove(0);
    }
 }
