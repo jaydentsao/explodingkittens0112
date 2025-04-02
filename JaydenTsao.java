@@ -9,11 +9,19 @@ public class JaydenTsao implements Strategy, GameListener
    private int[] totalCards;
    private int numDefuse;
    private boolean stf;
-   //private int aggresion=0;
-   //メ
+
    public String getName()
    {
-      return "Malenia,⠀Bot⠀of⠀Miquella";
+      return "King Botwin IV of A213";
+      //"Malenia, Bot of Miquella"
+      //"Malenia, Kitten of Rot"
+      //"cartifanbot436"
+      //"Reyna"
+      //"Mohg, Lord of Bots"
+      //"Botagon of the Kitten Order"
+      //"メ"
+      //"Playbot Carti"
+      //"Ken Citten"
    }
 
    public void gameStarted(Table table)
@@ -48,9 +56,14 @@ public class JaydenTsao implements Strategy, GameListener
       if(numDefuse<count[DEFUSE]){
          totalCards[DEFUSE]-=count[DEFUSE]-numDefuse;
       }
-      
+      if(deck.size()==getNumBombs()){
+         deck=new ArrayList<>();
+         for (int i = 0; i < getNumBombs(); i++) {
+            deck.add(EXPLODING_KITTEN);
+         }
+      }
       if(deck.get(0)==null){
-         if(table.getDrawPileSize()>getNumBombs()*10) return null;
+         if(table.getDrawPileSize()>getNumBombs()*5) return null;
          if(hand.contains(SEE_THE_FUTURE)){
             return new Play(SEE_THE_FUTURE);
          }
@@ -241,10 +254,8 @@ public class JaydenTsao implements Strategy, GameListener
 
    public boolean nope(int activeSeat, Play play, List<Integer> nopers)
    {
+      
       if(play.getVictim()==table.getSeat()) {
-         if(play.getCard()==SKIP||play.getCard()==ATTACK||play.getCount()==3){
-            return true;
-         }
          if(play.getCard()==FAVOR){
             if(favor(activeSeat)==DEFUSE||favor(activeSeat)==ATTACK||favor(activeSeat)==SEE_THE_FUTURE)
                return true;
@@ -252,8 +263,26 @@ public class JaydenTsao implements Strategy, GameListener
          if(play.getCount()==2){
             if((double)countUp(table.getHand())[DEFUSE]/table.getHandSize(table.getSeat())<0.2) return true;
          }
+         if(play.getCount()==3){
+            return true;
+         }
+      }
+      if(activeSeat==getPreviousSeat()){
+         if(play.getCard()==SKIP||play.getCard()==ATTACK){
+            return true;
+         }
       }
       return false;
+   }
+
+   private int getPreviousSeat(){
+      for (int i = table.getSeat()-1; i >=0; i--) {
+         if(!table.hasExploded(i)) return i;
+      }
+      for (int i = table.getNumSeats()-1; i > table.getSeat(); i--) {
+         if(!table.hasExploded(i)) return i;
+      }
+      return -1;
    }
    
    public void seeTheFuture(int[] futureCards)

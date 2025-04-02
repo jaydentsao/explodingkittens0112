@@ -56,8 +56,8 @@ public class Main
          else x++;
          System.out.println(i);
       }
-      System.out.println("Jayden "+x);
-      System.out.println("Remote" +y);
+      System.out.println("james "+x);
+      System.out.println("phinn" +y);
    }
 
    private static void main5(){
